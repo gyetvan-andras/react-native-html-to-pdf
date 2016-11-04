@@ -41,8 +41,11 @@ public class RNHTMLtoPDFModule extends ReactContextBaseJavaModule {
     try {
 
       String htmlString = options.getString("html");
+      String fileName = options.getType("fileName") == ReadableType.Null ? "" : options.getString("fileName");
+      float height = options.getType("height") == ReadableType.Null ? 0 : (float)options.getDouble("height");
+      float width = options.getType("width") == ReadableType.Null ? 0 : (float)options.getDouble("width");
 
-      String filePath = getFilePath(htmlString);
+      String filePath = getFilePath(htmlString, fileName, 0, 0, height, width);
 
       promise.resolve(filePath);
 
@@ -50,8 +53,8 @@ public class RNHTMLtoPDFModule extends ReactContextBaseJavaModule {
       promise.reject(e.getMessage());
     }
   }
-
-  private String getFilePath(String htmlString) throws Exception {
+  
+  private String getFilePath(String htmlString, String fileName, float llx, float lly, float urx, float ury) throws Exception {
 
     File path = new File(Environment.getExternalStorageDirectory(), Environment.DIRECTORY_DOCUMENTS);
 
@@ -59,12 +62,14 @@ public class RNHTMLtoPDFModule extends ReactContextBaseJavaModule {
       path.mkdir();
     }
 
-    File file = new File(path, "MyPdf.pdf");
+    File file = new File(path, fileName.equals("") ? "MyPdf.pdf" : fileName);
 
     try {
+      Rectangle pageSize = urx == 0 && ury == 0 ? PageSize.A4 : new Rectangle(llx, lly, urx, ury);        
+
       String html = "<html><head></head><body>" + htmlString + "</body></html>";
 
-      Document doc = new Document();
+      Document doc = new Document(pageSize);
 
       InputStream in = new ByteArrayInputStream(html.getBytes());
 
@@ -72,7 +77,7 @@ public class RNHTMLtoPDFModule extends ReactContextBaseJavaModule {
 
       doc.open();
 
-      XMLWorkerHelper.getInstance().parseXHtml(pdf, doc,in);
+      XMLWorkerHelper.getInstance().parseXHtml(pdf, doc, in);
 
       doc.close();
 

@@ -29,28 +29,30 @@ var Example = React.createClass({
 
   createPDF() {
     var options = {
-      html: '<h1>PDF TEST</h1>', // HTML String
+      html: '<h1>PDF TEST</h1>', // Required: HTML String
 
-      ****************** OPTIONS BELOW WILL NOT WORK ON ANDROID **************                              
       fileName: 'test',          /* Optional: Custom Filename excluded extention
                                     Default: Randomly generated
+                                    iOS and Android
                                   */
 
-
-      directory: 'docs'          /* Optional: 'docs' will save the file in the `Documents`
+      directory: 'docs',         /* Optional: 'docs' will save the file in the `Documents`
                                     Default: Temp directory
+                                    iOS only
                                   */
 
-      height: 800                /* Optional: 800 sets the height of the DOCUMENT that will be produced
-                                    Default: 612
+      height: 800,               /* Optional: 800 sets the height of the DOCUMENT that will be produced
+                                    Default: 612 (iOS) A4 (Android)
+                                    iOS and Android
                                   */
-      width: 1056                /* Optional: 1056 sets the width of the DOCUMENT that will produced
-                                    Default: 792
+      width: 1056,               /* Optional: 1056 sets the width of the DOCUMENT that will produced
+                                    Default: 792 (iOS) A4 (Android)
                                   */
-      padding: 24                 /* Optional: 24 is the # of pixels between the outer paper edge and
+      padding: 24,                /* Optional: 24 is the # of pixels between the outer paper edge and
                                             corresponding content edge.  Example: width of 1056 - 2*padding
                                             => content width of 1008
                                     Default: 10
+                                    iOS only
                                   */
     };
 
@@ -79,7 +81,7 @@ The android module pulls in iText to convert html to pdf.  You are supposed to o
 
 ```java
 include ':react-native-html-to-pdf'
-project(':react-native-html-to-pdf').projectDir = new File(rootProject.projectDir,'../node_modules/rreact-native-html-to-pdf/android')
+project(':react-native-html-to-pdf').projectDir = new File(rootProject.projectDir,'../node_modules/react-native-html-to-pdf/android')
 ```
 
 - Edit `android/app/build.gradle` file to include
