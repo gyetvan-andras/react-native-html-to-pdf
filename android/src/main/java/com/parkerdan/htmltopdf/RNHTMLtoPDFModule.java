@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReadableType;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,6 +18,8 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Rectangle;
 
 import android.os.Environment;
 import android.util.Log;

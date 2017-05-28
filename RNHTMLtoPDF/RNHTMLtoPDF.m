@@ -2,12 +2,12 @@
 //  Created by Christopher on 9/3/15.
 
 #import <UIKit/UIKit.h>
-#import "RCTConvert.h"
-#import "RCTEventDispatcher.h"
-#import "RCTView.h"
+#import <React/RCTConvert.h>
+#import <React/RCTEventDispatcher.h>
+#import <React/RCTView.h>
+#import <React/UIView+React.h>
+#import <React/RCTUtils.h>
 #import "RNHTMLtoPDF.h"
-#import "UIView+React.h"
-#import "RCTUtils.h"
 
 #define PDFSize CGSizeMake(612,792)
 
@@ -42,6 +42,7 @@
     CGSize _PDFSize;
     UIWebView *_webView;
     float _padding;
+    BOOL _base64;
     BOOL autoHeight;
 }
 
@@ -83,6 +84,12 @@ RCT_EXPORT_METHOD(convert:(NSDictionary *)options
         _filePath = [NSString stringWithFormat:@"%@%@.pdf", NSTemporaryDirectory(), _fileName];
     }
 
+    if (options[@"base64"] && [options[@"base64"] boolValue]) {
+        _base64 = true;   
+    } else {
+        _base64 = false;   
+    }
+    
     if (options[@"height"] && options[@"width"]) {
         float width = [RCTConvert float:options[@"width"]];
         float height = [RCTConvert float:options[@"height"]];
@@ -126,8 +133,16 @@ RCT_EXPORT_METHOD(convert:(NSDictionary *)options
     NSData *pdfData = [render printToPDF];
 
     if (pdfData) {
+        NSString *pdfBase64 = @"";
+        
         [pdfData writeToFile:_filePath atomically:YES];
-        _resolveBlock(_filePath);
+        if (_base64) {
+            pdfBase64 = [pdfData base64EncodedStringWithOptions:0];   
+        }
+        NSDictionary *data = [NSDictionary dictionaryWithObjectsAndKeys:
+                             pdfBase64, @"base64",
+                             _filePath, @"filePath", nil];
+        _resolveBlock(data);
     } else {
         NSError *error;
         _rejectBlock(RCTErrorUnspecified, nil, RCTErrorWithMessage(error.description));
