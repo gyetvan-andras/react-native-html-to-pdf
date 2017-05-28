@@ -1,5 +1,6 @@
 package com.parkerdan.htmltopdf;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -7,12 +8,14 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Paragraph;
@@ -42,35 +45,55 @@ public class RNHTMLtoPDFModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void convert(final ReadableMap options, final Promise promise) {
     try {
+			File destinationFile;
+      String htmlString = options.hasKey("html") ? options.getString("html") : null;
+      if (htmlString == null) return;
+      float height = options.hasKey("height") ? (float)options.getDouble("height") : 0;
+      float width = options.hasKey("width") ? (float)options.getDouble("width") : 0;
 
-      String htmlString = options.getString("html");
-      String fileName = options.getType("fileName") == ReadableType.Null ? "" : options.getString("fileName");
-      float height = options.getType("height") == ReadableType.Null ? 0 : (float)options.getDouble("height");
-      float width = options.getType("width") == ReadableType.Null ? 0 : (float)options.getDouble("width");
+      // String fileName = options.hasKey("fileName") ? options.getString("fileName") : "";
 
-      String filePath = getFilePath(htmlString, fileName, 0, 0, height, width);
+      String fileName;
+      if (options.hasKey("fileName")) {
+        fileName = options.getString("fileName");
+      } else {
+        fileName = UUID.randomUUID().toString();
+      }
 
-      promise.resolve(filePath);
+      if (options.hasKey("directory") && options.getString("directory").equals("docs")) {
+        File path = new File(Environment.getExternalStorageDirectory(), Environment.DIRECTORY_DOCUMENTS);
+        if (!path.exists()) path.mkdir();
+        destinationFile = new File(path, fileName + ".pdf");
+      } else {
+        destinationFile = getTempFile(fileName);
+      }
+			
+      String filePath = getFilePath(htmlString, destinationFile, 0, 0, height, width);
+
+      WritableMap resultMap = Arguments.createMap();
+      resultMap.putString("filePath", filePath);
+
+      promise.resolve(resultMap);
 
     } catch (Exception e) {
       promise.reject(e.getMessage());
     }
   }
   
-  private String getFilePath(String htmlString, String fileName, float llx, float lly, float urx, float ury) throws Exception {
+  private String getFilePath(String htmlString, File file, float llx, float lly, float urx, float ury) throws Exception {
 
-    File path = new File(Environment.getExternalStorageDirectory(), Environment.DIRECTORY_DOCUMENTS);
+    // File path = new File(Environment.getExternalStorageDirectory(), Environment.DIRECTORY_DOCUMENTS);
 
-    if ( !path.exists() ) {
-      path.mkdir();
-    }
+    // if ( !path.exists() ) {
+    //   path.mkdir();
+    // }
 
-    File file = new File(path, fileName.equals("") ? "MyPdf.pdf" : fileName);
+    // File file = new File(path, fileName.equals("") ? "MyPdf.pdf" : fileName);
 
     try {
       Rectangle pageSize = urx == 0 && ury == 0 ? PageSize.A4 : new Rectangle(llx, lly, urx, ury);        
 
-      String html = "<html><head></head><body>" + htmlString + "</body></html>";
+      String html = htmlString;
 
       Document doc = new Document(pageSize);
 
@@ -94,4 +117,17 @@ public class RNHTMLtoPDFModule extends ReactContextBaseJavaModule {
       throw new Exception();
     }
   }
+
+  private File getTempFile(String fileName) throws Exception {
+    try {
+      File outputDir = getReactApplicationContext().getCacheDir();
+      File outputFile = File.createTempFile(fileName, ".pdf", outputDir);
+
+      return outputFile;
+
+    } catch (Exception e) {
+      throw new Exception(e);
+    }
+  }
+	
 }
